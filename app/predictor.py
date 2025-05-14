@@ -2,14 +2,7 @@ import xgboost as xgb
 import pandas as pd
 
 def predict_profile(profile_data):
-    # Convert input data to a DataFrame
-    df = pd.DataFrame([profile_data])
-
-    # Load the trained model
-    model = xgb.Booster()
-    model.load_model("models/fake_profile_model.json")
-
-    # Ensure the input data has the expected features based on the updated schema
+    # Define the expected model features
     expected_features = [
         "username_length", "num_digits_in_username", "profile_has_picture",
         "profile_has_bio", "bio_word_count", "spam_word_count", "suspicious_words_in_bio",
@@ -17,13 +10,21 @@ def predict_profile(profile_data):
         "posts_count", "activity_score", "joined_recently", "is_verified"
     ]
 
-    # Ensure only required features are passed (columns in DataFrame must match expected features)
+    # Filter out only the expected features for the model
+    filtered_data = {key: profile_data[key] for key in expected_features if key in profile_data}
+    df = pd.DataFrame([filtered_data])
+
+    # Load the trained XGBoost model
+    model = xgb.Booster()
+    model.load_model("models/fake_profile_model.json")
+
+    # Convert to DMatrix format for prediction
     dmatrix = xgb.DMatrix(df[expected_features])
 
-    # Get prediction probability (the model will output a probability)
+    # Predict probability
     probability = model.predict(dmatrix)[0]
 
-    # Apply threshold (0.5 is standard for binary classification)
+    # Binary classification with 0.5 threshold
     predicted_label = 1 if probability >= 0.5 else 0
 
-    return predicted_label  # Returns 0 (Fake) or 1 (Legit)
+    return predicted_label  # 0: Fake, 1: Legit

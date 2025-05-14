@@ -1,8 +1,10 @@
 from pydantic import BaseModel
-from typing import List, Dict, Any, Optional
+from typing import List, Optional
 
-# Schema for a single profile request
-class FeatureResponse(BaseModel):
+# Schema for a single profile request (with username)
+class FeatureRequest(BaseModel):
+    username: str
+    platform_ref: str
     username_length: int
     num_digits_in_username: int
     profile_has_picture: int  # changed from bool to int
@@ -21,18 +23,23 @@ class FeatureResponse(BaseModel):
 
 # Schema for bulk profiles request
 class BulkProfilesRequest(BaseModel):
-    profiles: List[FeatureResponse]
+    profiles: List[FeatureRequest]
 
-# Success Response Schema for Bulk Predictions
+# Individual prediction result with only username and prediction
+class PredictionResult(BaseModel):
+    username: str
+    prediction: str
+
+# Success response schema
 class SuccessResponse(BaseModel):
     status: str = "success"
     code: int
     message: str
-    data: List[Dict[str, Any]]  # List of profile predictions
+    data: List[PredictionResult]
 
-# Error Response Schema
+# Error response schema
 class ErrorResponse(BaseModel):
     status: str = "error"
     code: int
     message: str
-    details: Optional[str] = None  # Detailed error message (optional)
+    details: Optional[str] = None
